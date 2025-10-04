@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load product_filters %}
+
+{% block title %}Sotuvlar - Shop.io{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="font-sans text-3xl font-bold tracking-tight text-foreground">Sotuvlar</h1>
+      <p class="text-muted-foreground mt-2">Barcha sotuvlar ro'yxati</p>
+    </div>
+    <div class="mt-4 sm:mt-0 flex space-x-2">
+      <a href="{% url 'sale_create' %}" class="inline-flex items-center justify-center px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2">
+        <i class="fas fa-plus mr-2"></i>
+        Yangi Sotuv
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Statistics -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="bg-background border border-border rounded-lg p-4">
+    <div class="flex items-center">
+      <div class="p-2 bg-blue-100 rounded-lg dark:bg-blue-900">
+        <i class="fas fa-shopping-cart text-blue-600 dark:text-blue-400"></i>
+      </div>
+      <div class="ml-4">
+        <p class="text-sm font-medium text-muted-foreground">Jami Sotuvlar</p>
+        <p class="text-2xl font-bold text-foreground">{{ total_sales|format_quantity }}</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="bg-background border border-border rounded-lg p-4">
+    <div class="flex items-center">
+      <div class="p-2 bg-green-100 rounded-lg dark:bg-green-900">
+        <i class="fas fa-coins text-green-600 dark:text-green-400"></i>
+      </div>
+      <div class="ml-4">
+        <p class="text-sm font-medium text-muted-foreground">Jami Daromad</p>
+        <p class="text-2xl font-bold text-foreground">{{ total_revenue|format_currency }} so'm</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="bg-background border border-border rounded-lg p-4">
+    <div class="flex items-center">
+      <div class="p-2 bg-orange-100 rounded-lg dark:bg-orange-900">
+        <i class="fas fa-calendar-day text-orange-600 dark:text-orange-400"></i>
+      </div>
+      <div class="ml-4">
+        <p class="text-sm font-medium text-muted-foreground">Bugungi Sotuvlar</p>
+        <p class="text-2xl font-bold text-foreground">{{ today_sales|format_quantity }}</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="bg-background border border-border rounded-lg p-4">
+    <div class="flex items-center">
+      <div class="p-2 bg-purple-100 rounded-lg dark:bg-purple-900">
+        <i class="fas fa-wallet text-purple-600 dark:text-purple-400"></i>
+      </div>
+      <div class="ml-4">
+        <p class="text-sm font-medium text-muted-foreground">Bugungi Daromad</p>
+        <p class="text-2xl font-bold text-foreground">{{ today_revenue|format_currency }} so'm</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sales Table -->
+<div class="bg-background border border-border rounded-xl shadow-sm overflow-hidden">
+  {% if sales %}
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-border bg-muted/10">
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ID</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mahsulot</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mijoz</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Miqdor</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Narx</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Chegirma</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Yakuniy</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Sana</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Amallar</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          {% for sale in sales %}
+          <tr class="hover:bg-muted/30 transition-colors">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground font-mono">{{ sale.id }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+              <div>
+                <p class="font-medium">{{ sale.product.name }}</p>
+                <p class="text-xs text-muted-foreground">{{ sale.product.brand }}</p>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+              {% if sale.client %}
+                {{ sale.client.name }} {{ sale.client.lname }}
+              {% else %}
+                <span class="text-muted-foreground">Mijozsiz</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+              {{ sale.quantity|floatformat:0 }} {{ sale.product.unit }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ sale.unit_price|format_currency }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+              {% if sale.discount > 0 %}
+                <span class="text-green-600 font-medium">{{ sale.discount|floatformat:0 }}%</span>
+              {% else %}
+                <span class="text-muted-foreground">0%</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground font-semibold">
+              {{ sale.final_price|format_currency }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+              {{ sale.sale_date|date:"d.m.Y H:i" }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <div class="flex space-x-2">
+                <a href="{% url 'sale_detail' sale.id %}" class="text-blue-600 hover:text-blue-800 transition-colors" title="Ko'rish">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{% url 'sale_receipt' sale.id %}" class="text-green-600 hover:text-green-800 transition-colors" title="Chek">
+                  <i class="fas fa-receipt"></i>
+                </a>
+                <a href="{% url 'sale_qr_code' sale.id %}" class="text-purple-600 hover:text-purple-800 transition-colors" title="QR Kod">
+                  <i class="fas fa-qrcode"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="text-center py-12">
+      <i class="fas fa-shopping-cart text-4xl text-muted-foreground mb-4"></i>
+      <h3 class="text-lg font-medium text-foreground mb-2">Hali sotuvlar mavjud emas</h3>
+      <p class="text-muted-foreground mb-6">Birinchi sotuvni qilish uchun quyidagi tugmani bosing</p>
+      <a href="{% url 'sale_create' %}" class="inline-flex items-center justify-center px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:opacity-90 transition-opacity">
+        <i class="fas fa-plus mr-2"></i>
+        Yangi Sotuv
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

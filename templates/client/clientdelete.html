@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ client.name }} {{ client.lname }} ni o'chirish - Shop.io{% endblock %}
+
+{% block content %}
+<div class="mb-8 mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="font-sans text-3xl font-bold tracking-tight text-foreground">Mijozni o'chirish</h1>
+            <p class="text-muted-foreground mt-2">Quyidagi mijozni rostdan ham o'chirmoqchimisiz?</p>
+        </div>
+    </div>
+</div>
+
+<div class="bg-background border border-border dark:border-gray-600 rounded-xl shadow-sm p-6 max-w-2xl">  <!-- Centered, responsive width -->
+    <div class="text-center mb-6">
+        <i class="fas fa-exclamation-triangle text-4xl text-yellow-500 dark:text-yellow-400 mb-4"></i>  <!-- Softer yellow in dark -->
+        <h2 class="text-xl font-semibold text-foreground mb-2">Ogohlantirish</h2>
+        <p class="text-muted-foreground dark:text-gray-400">Ushbu amalni ortga qaytarib bo'lmaydi</p>
+    </div>
+
+    <div class="bg-muted/50 dark:bg-muted/10 border border-border dark:border-gray-600 rounded-lg p-4 mb-6">  <!-- Deeper muted in dark -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">  <!-- Responsive: Stack on small, row on sm+ -->
+            <div>
+                <p class="text-sm text-muted-foreground dark:text-gray-500">ID</p>
+                <p class="text-foreground font-medium">{{ client.id }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-muted-foreground dark:text-gray-500">Ism</p>
+                <p class="text-foreground font-medium">{{ client.name }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-muted-foreground dark:text-gray-500">Familiya</p>
+                <p class="text-foreground font-medium">{{ client.lname }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-muted-foreground dark:text-gray-500">Chegirma</p>
+                <p class="text-foreground font-medium text-green-600 dark:text-green-400">{{ client.skidka }}%</p>  <!-- Vivid green in both -->
+            </div>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="flex space-x-3 justify-center">
+            <button type="submit"
+                class="inline-flex items-center justify-center px-3 py-1.5 bg-red-600 dark:bg-white dark:text-red-600 text-white rounded-md font-medium hover:bg-red-700 dark:hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500/20 dark:focus:ring-red-400/20 focus:ring-offset-2 shadow-sm hover:shadow-md">
+                <i class="fas fa-trash mr-1.5 text-xs"></i>
+                Ha, o'chirish
+            </button>
+            <a href="{% url 'clientview' client.id %}"
+                class="inline-flex items-center justify-center px-3 py-1.5 border border-border dark:border-gray-400 text-foreground rounded-md font-medium hover:bg-muted dark:hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:ring-offset-2">
+                <i class="fas fa-xmark mr-1.5 text-xs"></i>
+                Bekor
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Dark mode harmony: Crisper borders, warmer warnings -->
+<style>
+/* Layer on base: Subtle lifts, theme-aware reds */
+.dark .bg-muted\/70 { background-color: #1f1f1f !important; }  /* Depth without gloom */
+.dark .text-yellow-400 { color: #fbbf24 !important; }  /* Amber glow in dark */
+.dark .hover\:bg-gray-100:hover { background-color: #f3f4f6 !important; }  /* Soft cancel hover */
+</style>
+{% endblock %}

@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+{% load product_filters %}
+
+{% block title %}Mahsulotlar - Shop.io{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="font-sans text-3xl font-bold tracking-tight text-foreground">Mahsulotlar</h1>
+      <p class="text-muted-foreground mt-2">Barcha mahsulotlaringiz ro'yxati</p>
+    </div>
+    <div class="mt-4 sm:mt-0 flex space-x-2">
+      <a href="{% url 'productcreate' %}" class="inline-flex items-center justify-center px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2">
+        <i class="fas fa-plus mr-2"></i>
+        Yangi mahsulot
+      </a>
+      <a href="{% url 'productimport' %}" class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+        <i class="fas fa-upload mr-2"></i>
+        Import
+      </a>
+      <a href="{% url 'product_export' %}?{{ request.GET.urlencode }}" class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+        <i class="fas fa-download mr-2"></i>
+        Export
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="bg-background border border-border rounded-lg p-4">
+    <div class="flex items-center">
+      <div class="p-2 bg-blue-100 rounded-lg dark:bg-blue-900">
+        <i class="fas fa-boxes text-blue-600 dark:text-blue-400"></i>
+      </div>
+      <div class="ml-4">
+        <p class="text-sm font-medium text-muted-foreground">Jami Mahsulotlar</p>
+        <p class="text-2xl font-bold text-foreground">{{ total_products|format_quantity }}</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="bg-background border border-border rounded-lg p-4">
+    <div class="flex items-center">
+      <div class="p-2 bg-green-100 rounded-lg dark:bg-green-900">
+        <i class="fas fa-cubes text-green-600 dark:text-green-400"></i>
+      </div>
+      <div class="ml-4">
+        <p class="text-sm font-medium text-muted-foreground">Jami Miqdor</p>
+        <p class="text-2xl font-bold text-foreground">{{ total_quantity|format_quantity }}</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="bg-background border border-border rounded-lg p-4">
+    <div class="flex items-center">
+      <div class="p-2 bg-purple-100 rounded-lg dark:bg-purple-900">
+        <i class="fas fa-coins text-purple-600 dark:text-purple-400"></i>
+      </div>
+      <div class="ml-4">
+        <p class="text-sm font-medium text-muted-foreground">Jami Qiymat</p>
+        <p class="text-2xl font-bold text-foreground">{{ total_value|format_currency }} so'm</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="bg-background border border-border rounded-lg p-4">
+    <div class="flex items-center">
+      <div class="p-2 bg-orange-100 rounded-lg dark:bg-orange-900">
+        <i class="fas fa-chart-line text-orange-600 dark:text-orange-400"></i>
+      </div>
+      <div class="ml-4">
+        <p class="text-sm font-medium text-muted-foreground">O'rtacha Miqdor</p>
+        <p class="text-2xl font-bold text-foreground">{{ avg_quantity|format_quantity }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stock Level Statistics -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="bg-background border border-border rounded-lg p-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">Kam Qolgan</p>
+        <p class="text-2xl font-bold text-red-600">{{ low_stock|format_quantity }}</p>
+        <p class="text-xs text-muted-foreground">
+          {% if total_products > 0 %}
+            ({{ low_stock|floatformat:0 }} ta - {{ low_stock|percentage:total_products|floatformat:1 }}%)
+          {% else %}
+            (0%)
+          {% endif %}
+        </p>
+      </div>
+      <div class="p-2 bg-red-100 rounded-lg dark:bg-red-900">
+        <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400"></i>
+      </div>
+    </div>
+    <div class="mt-2 w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+      <div class="bg-red-600 h-2 rounded-full" 
+           style="width: {% if total_products > 0 %}{{ low_stock|percentage:total_products }}{% else %}0{% endif %}%"></div>
+    </div>
+  </div>
+  
+  <div class="bg-background border border-border rounded-lg p-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">O'rtacha</p>
+        <p class="text-2xl font-bold text-yellow-600">{{ medium_stock|format_quantity }}</p>
+        <p class="text-xs text-muted-foreground">
+          {% if total_products > 0 %}
+            ({{ medium_stock|floatformat:0 }} ta - {{ medium_stock|percentage:total_products|floatformat:1 }}%)
+          {% else %}
+            (0%)
+          {% endif %}
+        </p>
+      </div>
+      <div class="p-2 bg-yellow-100 rounded-lg dark:bg-yellow-900">
+        <i class="fas fa-minus-circle text-yellow-600 dark:text-yellow-400"></i>
+      </div>
+    </div>
+    <div class="mt-2 w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+      <div class="bg-yellow-600 h-2 rounded-full" 
+           style="width: {% if total_products > 0 %}{{ medium_stock|percentage:total_products }}{% else %}0{% endif %}%"></div>
+    </div>
+  </div>
+  
+  <div class="bg-background border border-border rounded-lg p-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm font-medium text-muted-foreground">Ko'p Qolgan</p>
+        <p class="text-2xl font-bold text-green-600">{{ high_stock|format_quantity }}</p>
+        <p class="text-xs text-muted-foreground">
+          {% if total_products > 0 %}
+            ({{ high_stock|floatformat:0 }} ta - {{ high_stock|percentage:total_products|floatformat:1 }}%)
+          {% else %}
+            (0%)
+          {% endif %}
+        </p>
+      </div>
+      <div class="p-2 bg-green-100 rounded-lg dark:bg-green-900">
+        <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+      </div>
+    </div>
+    <div class="mt-2 w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+      <div class="bg-green-600 h-2 rounded-full" 
+           style="width: {% if total_products > 0 %}{{ high_stock|percentage:total_products }}{% else %}0{% endif %}%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="bg-background border border-border rounded-xl shadow-sm p-6 mb-6">
+  <form method="get" class="space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <!-- Search -->
+      <div>
+        <label for="search" class="block text-sm font-medium text-foreground mb-2">Qidirish</label>
+        <input type="text" name="search" id="search" value="{{ search_query }}" 
+               placeholder="Nomi yoki brend bo'yicha..." 
+               class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+      </div>
+      
+      <!-- Unit Filter -->
+      <div>
+        <label for="unit" class="block text-sm font-medium text-foreground mb-2">O'lchov birligi</label>
+        <select name="unit" id="unit" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+          <option value="">Barchasi</option>
+          {% for unit in units %}
+            <option value="{{ unit }}" {% if unit_filter == unit %}selected{% endif %}>{{ unit }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <!-- Stock Level Filter -->
+      <div>
+        <label for="stock" class="block text-sm font-medium text-foreground mb-2">Qolgan miqdor</label>
+        <select name="stock" id="stock" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+          <option value="">Barchasi</option>
+          <option value="low" {% if stock_filter == "low" %}selected{% endif %}>Kam qolgan</option>
+          <option value="medium" {% if stock_filter == "medium" %}selected{% endif %}>O'rtacha</option>
+          <option value="high" {% if stock_filter == "high" %}selected{% endif %}>Ko'p qolgan</option>
+        </select>
+      </div>
+      
+      <!-- Sort -->
+      <div>
+        <label for="sort" class="block text-sm font-medium text-foreground mb-2">Tartiblash</label>
+        <select name="sort" id="sort" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+          <option value="id" {% if sort_by == "id" %}selected{% endif %}>ID</option>
+          <option value="name" {% if sort_by == "name" %}selected{% endif %}>Nomi</option>
+          <option value="brand" {% if sort_by == "brand" %}selected{% endif %}>Brend</option>
+          <option value="price" {% if sort_by == "price" %}selected{% endif %}>Narx</option>
+          <option value="quantity" {% if sort_by == "quantity" %}selected{% endif %}>Miqdor</option>
+          <option value="created_at" {% if sort_by == "created_at" %}selected{% endif %}>Sana</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="flex space-x-3">
+      <button type="submit" class="inline-flex items-center justify-center px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2">
+        <i class="fas fa-filter mr-2"></i>
+        Filtrlash
+      </button>
+      <a href="{% url 'productlist' %}" class="inline-flex items-center justify-center px-4 py-2 border border-border text-foreground rounded-lg font-medium hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2">
+        <i class="fas fa-times mr-2"></i>
+        Tozalash
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Products Table -->
+<div class="bg-background border border-border rounded-xl shadow-sm overflow-hidden">
+  {% if products %}
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-border bg-muted/10">
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if unit_filter %}unit={{ unit_filter }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}sort=id&order={% if sort_by == 'id' and sort_order == 'asc' %}desc{% else %}asc{% endif %}" class="flex items-center space-x-1 hover:text-foreground transition-colors">
+                <span>ID</span>
+                {% if sort_by == 'id' %}
+                  <i class="fas fa-arrow-{% if sort_order == 'asc' %}up{% else %}down{% endif %} text-xs"></i>
+                {% endif %}
+              </a>
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if unit_filter %}unit={{ unit_filter }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}sort=name&order={% if sort_by == 'name' and sort_order == 'asc' %}desc{% else %}asc{% endif %}" class="flex items-center space-x-1 hover:text-foreground transition-colors">
+                <span>Nomi</span>
+                {% if sort_by == 'name' %}
+                  <i class="fas fa-arrow-{% if sort_order == 'asc' %}up{% else %}down{% endif %} text-xs"></i>
+                {% endif %}
+              </a>
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if unit_filter %}unit={{ unit_filter }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}sort=brand&order={% if sort_by == 'brand' and sort_order == 'asc' %}desc{% else %}asc{% endif %}" class="flex items-center space-x-1 hover:text-foreground transition-colors">
+                <span>Brend</span>
+                {% if sort_by == 'brand' %}
+                  <i class="fas fa-arrow-{% if sort_order == 'asc' %}up{% else %}down{% endif %} text-xs"></i>
+                {% endif %}
+              </a>
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if unit_filter %}unit={{ unit_filter }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}sort=price&order={% if sort_by == 'price' and sort_order == 'asc' %}desc{% else %}asc{% endif %}" class="flex items-center space-x-1 hover:text-foreground transition-colors">
+                <span>Narx (so'm)</span>
+                {% if sort_by == 'price' %}
+                  <i class="fas fa-arrow-{% if sort_order == 'asc' %}up{% else %}down{% endif %} text-xs"></i>
+                {% endif %}
+              </a>
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if unit_filter %}unit={{ unit_filter }}&{% endif %}{% if stock_filter %}stock={{ stock_filter }}&{% endif %}sort=quantity&order={% if sort_by == 'quantity' and sort_order == 'asc' %}desc{% else %}asc{% endif %}" class="flex items-center space-x-1 hover:text-foreground transition-colors">
+                <span>Miqdor</span>
+                {% if sort_by == 'quantity' %}
+                  <i class="fas fa-arrow-{% if sort_order == 'asc' %}up{% else %}down{% endif %} text-xs"></i>
+                {% endif %}
+              </a>
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Oʻlchov</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Holat</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Amallar</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          {% for product in products %}
+          <tr class="hover:bg-muted/30 transition-colors">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground font-mono">{{ product.id }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ product.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ product.brand }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ product.price|format_currency }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ product.quantity|format_quantity }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ product.get_unit_display }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ product|stock_status_color:avg_quantity }}">
+                <i class="fas {{ product|stock_status_icon:avg_quantity }} mr-1"></i>
+                {{ product|stock_status_text:avg_quantity }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <div class="flex space-x-2">
+                <a href="{% url 'productview' product.id %}" class="text-blue-600 hover:text-blue-800 transition-colors" title="Ko'rish">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{% url 'productedit' product.id %}" class="text-green-600 hover:text-green-800 transition-colors" title="Tahrirlash">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a href="{% url 'productdelete' product.id %}" class="text-red-600 hover:text-red-800 transition-colors" title="O'chirish">
+                  <i class="fas fa-trash"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="px-6 py-4 border-t border-border bg-muted/30">
+      <p class="text-sm text-muted-foreground">
+        Jami <span class="font-medium">{{ total_products }}</span> ta mahsulot
+      </p>
+    </div>
+  {% else %}
+    <div class="text-center py-12">
+      <i class="fas fa-boxes text-4xl text-muted-foreground mb-4"></i>
+      <h3 class="text-lg font-medium text-foreground mb-2">Mahsulotlar topilmadi</h3>
+      <p class="text-muted-foreground mb-6">Filtr shartlariga mos mahsulotlar mavjud emas</p>
+      <a href="{% url 'productlist' %}" class="inline-flex items-center justify-center px-4 py-2 border border-border text-foreground rounded-lg font-medium hover:bg-muted transition-colors">
+        Filtrlarni tozalash
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

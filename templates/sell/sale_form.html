@@ -1,0 +1,719 @@
+{% extends 'base.html' %}
+{% load product_filters %}
+
+{% block title %}Mahsulot Sotish - Shop.io{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+  <h1 class="font-sans text-3xl font-bold tracking-tight text-foreground">Mahsulot Sotish</h1>
+  <p class="text-muted-foreground mt-2">Yangi sotuvni ro'yxatga oling</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="lg:col-span-2">
+    <div class="bg-background border border-border rounded-xl shadow-sm p-6">
+      <form method="post" id="saleForm">
+        {% csrf_token %}
+        
+        <div class="space-y-6">
+          <!-- Client Selection -->
+          <div>
+            <label for="id_client" class="block text-sm font-medium text-foreground mb-2">
+              Mijoz
+            </label>
+            {{ form.client }}
+            <div id="client-discount-info" class="mt-2 hidden">
+              <span class="text-sm text-green-600 font-medium" id="discount-text"></span>
+            </div>
+          </div>
+          
+          <!-- Products Section -->
+          <div>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-foreground">Mahsulotlar</h3>
+              <button type="button" id="add-item" class="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors">
+                <i class="fas fa-plus mr-2"></i> Mahsulot qo'shish
+              </button>
+            </div>
+            
+            <div id="items-container">
+              <!-- Items will be added here dynamically -->
+              <!-- Items will be added here dynamically -->
+              <div class="item-row border border-border rounded-lg p-4 mb-4 bg-muted/30">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <!-- Product -->
+                  <div>
+                    <label class="block text-sm font-medium text-foreground mb-2">Mahsulot</label>
+                    <select name="product" class="product-select w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
+                      <option value="">Mahsulot tanlang...</option>
+                      {% for product in all_products %}  <!-- FIXED: Use all_products from view -->
+                        <option value="{{ product.id }}">{{ product.name }} - {{ product.brand }} ({{ product.quantity }} {{ product.unit }})</option>
+                      {% empty %}
+                        <option value="">Mahsulotlar yo'q</option>  <!-- Debug if empty -->
+                      {% endfor %}
+                    </select>
+                  </div>
+                  
+                  <!-- Quantity -->
+                  <div>
+                    <label class="block text-sm font-medium text-foreground mb-2">Miqdor</label>
+                    <input type="number" name="quantity" class="quantity-input w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent" step="0.01" min="0.01" placeholder="Miqdor">
+                  </div>
+                  
+                  <!-- Unit Price -->
+                  <div>
+                    <label class="block text-sm font-medium text-foreground mb-2">Narx (so'm)</label>
+                    <input type="number" name="unit_price" class="unit-price-input w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent dark:bg-muted/10" step="0.01" readonly>
+                  </div>
+                </div>
+                
+                <!-- Product Info -->
+                <div class="product-info mt-2 hidden">
+                  <div class="text-sm text-muted-foreground">
+                    <strong>Mavjud:</strong> <span class="available-quantity font-medium"></span> 
+                    <span class="product-unit font-medium"></span>
+                  </div>
+                </div>
+                
+                <!-- Remove Button -->
+                <div class="mt-2 text-right">
+                  <button type="button" class="remove-item text-red-600 hover:text-red-800 text-sm">
+                    <i class="fas fa-trash mr-1"></i> O'chirish
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Discount -->
+            <div>
+              <label for="id_discount" class="block text-sm font-medium text-foreground mb-2">
+                Umumiy chegirma (%)
+              </label>
+              {{ form.discount }}
+            </div>
+            
+            <!-- Payment Method -->
+            <div>
+              <label for="id_payment_method" class="block text-sm font-medium text-foreground mb-2">
+                To'lov usuli
+              </label>
+              {{ form.payment_method }}
+            </div>
+          </div>
+          
+          <!-- Detailed Price Calculation -->
+          <div class="bg-muted/10 border border-border rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-foreground mb-3">Batafsil hisob</h3>
+            
+            <!-- Items Breakdown -->
+            <div id="items-breakdown" class="space-y-3 mb-4 max-h-60 overflow-y-auto">
+              <!-- Items will be listed here dynamically -->
+              <div class="text-center text-muted-foreground py-4" id="no-items-message">
+                Hozircha mahsulot qo'shilmagan
+              </div>
+            </div>
+            
+            <!-- Total Summary -->
+            <div class="border-t border-border pt-3 space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-muted-foreground">Mahsulotlar jami:</span>
+                <span class="font-medium" id="subtotal-price">0 so'm</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-muted-foreground">Chegirma (<span id="discount-percentage">0</span>%):</span>
+                <span class="font-medium text-green-600" id="total-discount-amount">0 so'm</span>
+              </div>
+              <div class="flex justify-between border-t border-border pt-2">
+                <span class="text-foreground font-semibold">Yakuniy jami:</span>
+                <span class="text-foreground font-bold text-lg" id="final-total-price">0 so'm</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex space-x-3 pt-4">
+            <button type="submit" class="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+              <i class="fas fa-cash-register mr-2"></i>
+              Sotishni Tasdiqlash
+            </button>
+            <a href="{% url 'sale_list' %}" class="inline-flex items-center justify-center px-6 py-3 border border-border text-foreground rounded-lg font-medium hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2">
+              Bekor qilish
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Quick Actions -->
+  <div class="lg:col-span-1">
+    <div class="bg-background border border-border rounded-xl shadow-sm p-6">
+      <h3 class="text-lg font-semibold text-foreground mb-4">Tezkor Amallar</h3>
+      
+      <div class="space-y-3">
+        <a href="{% url 'sale_list' %}" class="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+          <i class="fas fa-list mr-2"></i>
+          Sotuvlar Ro'yxati
+        </a>
+        <a href="{% url 'productlist' %}" class="w-full flex items-center justify-center px-4 py-3 border border-border text-foreground rounded-lg font-medium hover:bg-muted transition-colors">
+          <i class="fas fa-boxes mr-2"></i>
+          Mahsulotlar
+        </a>
+        <a href="{% url 'clientlist' %}" class="w-full flex items-center justify-center px-4 py-3 border border-border text-foreground rounded-lg font-medium hover:bg-muted transition-colors">
+          <i class="fas fa-users mr-2"></i>
+          Mijozlar
+        </a>
+      </div>
+      
+      <!-- Recent Products -->
+      <div class="mt-6 pt-6 border-t border-border">
+        <h4 class="font-medium text-foreground mb-3">Mavjud Mahsulotlar</h4>
+        <div class="space-y-2 max-h-60 overflow-y-auto">
+          {% for product in recent_products %}
+          <div class="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 cursor-pointer border border-transparent hover:border-accent transition-colors" 
+               onclick="selectProduct({{ product.id }})"
+               data-product-id="{{ product.id }}"
+               id="product-{{ product.id }}">
+            <div>
+              <p class="text-sm font-medium text-foreground">{{ product.name }}</p>
+              <p class="text-xs text-muted-foreground">{{ product.brand }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-medium text-foreground">{{ product.price|format_currency }} so'm</p>
+              <p class="text-xs text-muted-foreground">{{ product.quantity|floatformat:0 }} {{ product.unit }}</p>
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-sm text-muted-foreground text-center py-4">Mavjud mahsulotlar yo'q</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded - initializing multi-item sale form');
+    
+    // Debug elements
+    console.log('=== DEBUG ELEMENTS ===');
+    console.log('items-breakdown:', document.getElementById('items-breakdown'));
+    console.log('no-items-message:', document.getElementById('no-items-message'));
+    console.log('subtotal-price:', document.getElementById('subtotal-price'));
+    console.log('items-container:', document.getElementById('items-container'));
+    console.log('add-item:', document.getElementById('add-item'));
+    console.log('=== END DEBUG ===');
+    
+    // Add new item
+    document.getElementById('add-item').addEventListener('click', function() {
+        console.log('Add item button clicked');
+        addNewItem();
+    });
+    
+    // Client discount functionality
+    const clientSelect = document.getElementById('id_client');
+    if (clientSelect) {
+        clientSelect.addEventListener('change', function() {
+            console.log('Client changed:', this.value);
+            const clientId = this.value;
+            const discountInfo = document.getElementById('client-discount-info');
+            const discountText = document.getElementById('discount-text');
+            const discountInput = document.getElementById('id_discount');
+            
+            if (clientId) {
+                fetch(`/sell/get-client-discount/?client_id=${clientId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Client discount data:', data);
+                        if (data.discount > 0) {
+                            discountInfo.classList.remove('hidden');
+                            discountText.textContent = `Mijoz chegirmasi: ${data.discount}%`;
+                            discountInput.value = data.discount;
+                            calculateTotalPrices();
+                        } else {
+                            discountInfo.classList.add('hidden');
+                            discountInput.value = 0;
+                            calculateTotalPrices();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Client discount error:', error);
+                        discountInfo.classList.add('hidden');
+                        discountInput.value = 0;
+                        calculateTotalPrices();
+                    });
+            } else {
+                discountInfo.classList.add('hidden');
+                discountInput.value = 0;
+                calculateTotalPrices();
+            }
+        });
+    }
+    
+    // Discount input change
+    const discountInput = document.getElementById('id_discount');
+    if (discountInput) {
+        discountInput.addEventListener('input', function() {
+            console.log('Discount input changed:', this.value);
+            calculateTotalPrices();
+        });
+    }
+    
+    // Initial setup
+    initializeFirstItem();
+    calculateTotalPrices(); // Initial calculation
+    
+    console.log('Form initialization completed');
+});
+
+function addNewItem() {
+    console.log('Adding new item...');
+    const itemsContainer = document.getElementById('items-container');
+    if (!itemsContainer) {
+        console.error('Items container not found');
+        return;
+    }
+    
+    const newItem = document.createElement('div');
+    newItem.className = 'item-row border border-border rounded-lg p-4 mb-4 bg-muted/30';
+    newItem.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Product -->
+            <div>
+                <label class="block text-sm font-medium text-foreground mb-2">Mahsulot</label>
+                <select name="product" class="product-select w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
+                    <option value="">Mahsulot tanlang...</option>
+                    {% for product in all_products %}
+                        <option value="{{ product.id }}">{{ product.name }} - {{ product.brand }} ({{ product.quantity }} {{ product.unit }})</option>
+                    {% empty %}
+                        <option value="">Mahsulotlar yo'q</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Quantity -->
+            <div>
+                <label class="block text-sm font-medium text-foreground mb-2">Miqdor</label>
+                <input type="number" name="quantity" class="quantity-input w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent" step="0.01" min="0.01" placeholder="Miqdor">
+            </div>
+            
+            <!-- Unit Price -->
+            <div>
+                <label class="block text-sm font-medium text-foreground mb-2">Narx (so'm)</label>
+                <input type="number" name="unit_price" class="unit-price-input w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent bg-gray-100" step="0.01" readonly>
+            </div>
+        </div>
+        
+        <!-- Product Info -->
+        <div class="product-info mt-2 hidden">
+            <div class="text-sm text-muted-foreground">
+                <strong>Mavjud:</strong> <span class="available-quantity font-medium"></span> 
+                <span class="product-unit font-medium"></span>
+            </div>
+        </div>
+        
+        <!-- Remove Button -->
+        <div class="mt-2 text-right">
+            <button type="button" class="remove-item text-red-600 hover:text-red-800 text-sm">
+                <i class="fas fa-trash mr-1"></i> O'chirish
+            </button>
+        </div>
+    `;
+    
+    itemsContainer.appendChild(newItem);
+    console.log('New item added to DOM');
+    
+    // Add event listeners to new item
+    initializeItemEvents(newItem);
+    
+    // Recalculate prices
+    calculateTotalPrices();
+}
+
+function initializeFirstItem() {
+    console.log('Initializing first item...');
+    const firstItem = document.querySelector('.item-row');
+    if (firstItem) {
+        initializeItemEvents(firstItem);
+        console.log('First item initialized');
+    } else {
+        console.error('First item not found');
+    }
+}
+
+function initializeItemEvents(item) {
+    console.log('Initializing events for item:', item);
+    
+    const productSelect = item.querySelector('.product-select');
+    const quantityInput = item.querySelector('.quantity-input');
+    const unitPriceInput = item.querySelector('.unit-price-input');
+    const productInfo = item.querySelector('.product-info');
+    const removeBtn = item.querySelector('.remove-item');
+    
+    if (!productSelect || !quantityInput || !unitPriceInput || !productInfo || !removeBtn) {
+        console.error('Some elements not found in item:', {productSelect, quantityInput, unitPriceInput, productInfo, removeBtn});
+        return;
+    }
+    
+    // Product selection
+    productSelect.addEventListener('change', function() {
+        console.log('Product select changed:', this.value);
+        const productId = this.value;
+        
+        if (productId) {
+            fetch(`/sell/get-product-info/?product_id=${productId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Product info received:', data);
+                    // Show product info
+                    productInfo.classList.remove('hidden');
+                    const availableQuantity = productInfo.querySelector('.available-quantity');
+                    const productUnit = productInfo.querySelector('.product-unit');
+                    
+                    if (availableQuantity) availableQuantity.textContent = data.quantity;
+                    if (productUnit) productUnit.textContent = data.unit;
+                    
+                    // Set unit price automatically
+                    unitPriceInput.value = data.price;
+                    console.log('Unit price set to:', data.price);
+                    
+                    // Set max quantity and placeholder
+                    quantityInput.max = data.quantity;
+                    quantityInput.placeholder = `Maksimum: ${data.quantity}`;
+                    
+                    // Reset quantity
+                    quantityInput.value = '';
+                    
+                    // Calculate total prices
+                    calculateTotalPrices();
+                })
+                .catch(error => {
+                    console.error('Product info error:', error);
+                    alert('Mahsulot ma\'lumotlarini olishda xatolik');
+                });
+        } else {
+            productInfo.classList.add('hidden');
+            unitPriceInput.value = '';
+            quantityInput.value = '';
+            quantityInput.placeholder = '';
+            calculateTotalPrices();
+        }
+    });
+    
+    // Quantity input
+    quantityInput.addEventListener('input', function() {
+        console.log('Quantity input changed:', this.value);
+        calculateTotalPrices();
+        
+        // Validate quantity
+        const productId = productSelect.value;
+        const quantity = parseFloat(this.value) || 0;
+        
+        if (productId && quantity > 0) {
+            fetch(`/sell/get-product-info/?product_id=${productId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (quantity > data.quantity) {
+                        this.classList.add('border-red-500');
+                        console.log('Quantity exceeds available stock');
+                    } else {
+                        this.classList.remove('border-red-500');
+                    }
+                });
+        }
+    });
+    
+    // Remove item
+    removeBtn.addEventListener('click', function() {
+        console.log('Remove item clicked');
+        const items = document.querySelectorAll('.item-row');
+        if (items.length > 1) {
+            item.remove();
+            calculateTotalPrices();
+        } else {
+            alert('Kamida bitta mahsulot qo\'shilishi kerak!');
+        }
+    });
+    
+    console.log('Item events initialized successfully');
+}
+
+function calculateTotalPrices() {
+    console.log('=== CALCULATING TOTAL PRICES ===');
+    
+    try {
+        let subtotalPrice = 0;
+        const discount = parseFloat(document.getElementById('id_discount')?.value) || 0;
+        console.log('Discount:', discount);
+        
+        // Get elements - use global document object
+        const itemsBreakdown = document.getElementById('items-breakdown');
+        
+        console.log('Elements found:', {
+            itemsBreakdown: !!itemsBreakdown
+        });
+        
+        if (!itemsBreakdown) {
+            console.error('Items breakdown not found');
+            return;
+        }
+        
+        // Clear previous breakdown (this will remove no-items-message too)
+        itemsBreakdown.innerHTML = '';
+        console.log('Cleared items breakdown');
+        
+        let hasItems = false;
+        let itemCount = 0;
+        
+        // Calculate total from all items and collect data
+        const items = document.querySelectorAll('.item-row');
+        console.log('Total items found:', items.length);
+        
+        items.forEach((item, index) => {
+            const productSelect = item.querySelector('.product-select');
+            const quantityInput = item.querySelector('.quantity-input');
+            const unitPriceInput = item.querySelector('.unit-price-input');
+            
+            if (!productSelect || !quantityInput || !unitPriceInput) {
+                console.log(`Skipping item ${index} - missing inputs`);
+                return;
+            }
+            
+            const productId = productSelect.value;
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const unitPrice = parseFloat(unitPriceInput.value) || 0;
+            const itemTotal = quantity * unitPrice;
+            
+            console.log(`Item ${index}:`, {productId, quantity, unitPrice, itemTotal});
+            
+            // FIXED: Show even if quantity == 0, but only add to subtotal if >0
+            if (productId && unitPrice > 0) {
+                hasItems = true;
+                itemCount++;
+                
+                // Get product name for display
+                const selectedOption = productSelect.options[productSelect.selectedIndex];
+                const productText = selectedOption.text.split(' (')[0]; // Remove quantity part
+                
+                console.log(`Adding to breakdown: ${productText} - ${itemTotal}`);
+                
+                // Add to breakdown
+                const itemElement = document.createElement('div');
+                itemElement.className = 'flex justify-between items-center text-sm border-b border-border pb-2';
+                itemElement.innerHTML = `
+                    <div class="flex-1">
+                        <div class="font-medium text-foreground">${itemCount}. ${productText}</div>
+                        <div class="text-xs text-muted-foreground">
+                            ${quantity || 0} × ${formatNumber(unitPrice)} so'm
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-medium text-foreground">${formatNumber(itemTotal)} so'm</div>
+                    </div>
+                `;
+                itemsBreakdown.appendChild(itemElement);
+                
+                // Only add to subtotal if there's actual value
+                if (itemTotal > 0) {
+                    subtotalPrice += itemTotal;
+                }
+            }
+        });
+        
+        console.log('Final subtotal:', subtotalPrice);
+        console.log('Has items:', hasItems);
+        console.log('Item count:', itemCount);
+        
+        // FIXED: Recreate and append no-items-message if no items
+        if (!hasItems) {
+            const messageDiv = document.createElement('div');
+            messageDiv.id = 'no-items-message';
+            messageDiv.className = 'text-center text-muted-foreground py-4';
+            messageDiv.textContent = 'Hozircha mahsulot qo\'shilmagan';
+            itemsBreakdown.appendChild(messageDiv);
+            console.log('Appended no-items message');
+        } else {
+            console.log('No need for no-items message');
+        }
+        
+        const totalDiscountAmount = (subtotalPrice * discount) / 100;
+        const finalTotalPrice = subtotalPrice - totalDiscountAmount;
+        
+        console.log('Calculated:', {
+            subtotalPrice,
+            totalDiscountAmount,
+            finalTotalPrice
+        });
+        
+        // Format numbers with spaces
+        function formatNumber(num) {
+            return new Intl.NumberFormat('ru-RU').format(Math.round(num));
+        }
+        
+        // Update summary
+        const subtotalElement = document.getElementById('subtotal-price');
+        const discountPercentageElement = document.getElementById('discount-percentage');
+        const discountAmountElement = document.getElementById('total-discount-amount');
+        const finalPriceElement = document.getElementById('final-total-price');
+        
+        console.log('Summary elements:', {
+            subtotalElement: !!subtotalElement,
+            discountPercentageElement: !!discountPercentageElement,
+            discountAmountElement: !!discountAmountElement,
+            finalPriceElement: !!finalPriceElement
+        });
+        
+        if (subtotalElement) {
+            subtotalElement.textContent = formatNumber(subtotalPrice) + ' so\'m';
+            console.log('Updated subtotal:', subtotalElement.textContent);
+        }
+        if (discountPercentageElement) {
+            discountPercentageElement.textContent = discount;
+            console.log('Updated discount percentage:', discount);
+        }
+        if (discountAmountElement) {
+            discountAmountElement.textContent = `-${formatNumber(totalDiscountAmount)} so'm`;
+            console.log('Updated discount amount:', discountAmountElement.textContent);
+        }
+        if (finalPriceElement) {
+            finalPriceElement.textContent = formatNumber(finalTotalPrice) + ' so\'m';
+            console.log('Updated final price:', finalPriceElement.textContent);
+        }
+        
+        console.log('=== CALCULATION COMPLETED ===');
+        
+    } catch (error) {
+        console.error('Error in calculateTotalPrices:', error);
+    }
+}
+
+// Quick product selection
+function selectProduct(productId) {
+    console.log('Quick selecting product:', productId);
+    
+    // Add to the last item or create new one
+    const items = document.querySelectorAll('.item-row');
+    const lastItem = items[items.length - 1];
+    if (!lastItem) {
+        console.error('No items found');
+        return;
+    }
+    
+    const lastProductSelect = lastItem.querySelector('.product-select');
+    if (!lastProductSelect) {
+        console.error('Product select not found in last item');
+        return;
+    }
+    
+    // Check if last item is empty
+    if (!lastProductSelect.value) {
+        console.log('Selecting product in existing empty item');
+        lastProductSelect.value = productId;
+        lastProductSelect.dispatchEvent(new Event('change'));
+    } else {
+        console.log('Creating new item and selecting product');
+        // Add new item and select product
+        addNewItem();
+        setTimeout(() => {
+            const newItems = document.querySelectorAll('.item-row');
+            const newLastItem = newItems[newItems.length - 1];
+            const newProductSelect = newLastItem.querySelector('.product-select');
+            if (newProductSelect) {
+                newProductSelect.value = productId;
+                newProductSelect.dispatchEvent(new Event('change'));
+            }
+        }, 100);
+    }
+}
+
+// Form submission validation
+const saleForm = document.getElementById('saleForm');
+if (saleForm) {
+    saleForm.addEventListener('submit', function(e) {
+        console.log('Form submission attempted');
+        let hasValidItems = false;
+        let errorMessages = [];
+        
+        document.querySelectorAll('.item-row').forEach((item, index) => {
+            const productSelect = item.querySelector('.product-select');
+            const quantityInput = item.querySelector('.quantity-input');
+            if (!productSelect || !quantityInput) return;
+            
+            const productId = productSelect.value;
+            const quantity = parseFloat(quantityInput.value) || 0;
+            
+            if (productId && quantity > 0) {
+                hasValidItems = true;
+            } else if (productId || quantity > 0) {
+                // Partially filled item
+                errorMessages.push(`${index + 1}-chi qatorda mahsulot yoki miqdor to'liq kiritilmagan`);
+            }
+        });
+        
+        if (!hasValidItems) {
+            e.preventDefault();
+            alert('❌ Iltimos, kamida bitta mahsulot tanlang va miqdor kiriting!');
+            return;
+        }
+        
+        if (errorMessages.length > 0) {
+            e.preventDefault();
+            alert('❌ Quyidagi xatoliklar mavjud:\n' + errorMessages.join('\n'));
+            return;
+        }
+        
+        console.log('Form submission validated successfully');
+    });
+}
+</script>
+
+<style>
+.unit-price-input {
+    background-color: #f9fafb;
+    cursor: not-allowed;
+}
+
+.border-red-500 {
+    border-color: #ef4444 !important;
+}
+
+.item-row {
+    transition: all 0.2s ease;
+}
+
+.remove-item {
+    transition: color 0.2s ease;
+}
+
+#items-breakdown {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+#items-breakdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+#items-breakdown::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+#items-breakdown::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+#items-breakdown::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+</style>
+{% endblock %}

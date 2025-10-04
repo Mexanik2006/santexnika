@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% load sell_filters %}
+
+{% block title %}Sotuv #{{ sale.id }} - Shop.io{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="font-sans text-3xl font-bold tracking-tight text-foreground">Sotuv #{{ sale.id }}</h1>
+      <p class="text-muted-foreground mt-2">Sotuv tafsilotlari</p>
+    </div>
+    <div class="mt-4 sm:mt-0 flex space-x-2">
+      <a href="{% url 'sale_receipt' sale.id %}" class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
+        <i class="fas fa-receipt mr-2"></i>
+        Chek Olish
+      </a>
+      <a href="{% url 'sale_qr_code' sale.id %}" class="inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors">
+        <i class="fas fa-qrcode mr-2"></i>
+        QR Kod
+      </a>
+      <a href="{% url 'sale_list' %}" class="inline-flex items-center justify-center px-4 py-2 border border-border text-foreground rounded-lg font-medium hover:bg-muted transition-colors">
+        <i class="fas fa-arrow-left mr-2"></i>
+        Orqaga
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="lg:col-span-2">
+    <!-- Sotuv Ma'lumotlari -->
+    <div class="bg-background border border-border rounded-xl shadow-sm p-6 mb-6">
+      <h2 class="text-xl font-semibold text-foreground mb-4">Sotuv Ma'lumotlari</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Asosiy Ma'lumotlar -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-muted-foreground mb-1">Sotuv ID</label>
+            <p class="text-lg font-mono font-bold text-foreground">#{{ sale.id }}</p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-muted-foreground mb-1">Sana va Vaqt</label>
+            <p class="text-foreground">{{ sale.sale_date|date:"d.m.Y H:i" }}</p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-muted-foreground mb-1">Sotuvchi</label>
+            <p class="text-foreground">{{ sale.seller.get_full_name|default:sale.seller.username }}</p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-muted-foreground mb-1">To'lov Usuli</label>
+            <p class="text-foreground">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                {% if sale.payment_method == 'cash' %}bg-green-100 text-green-800
+                {% elif sale.payment_method == 'card' %}bg-blue-100 text-blue-800
+                {% else %}bg-purple-100 text-purple-800{% endif %}">
+                <i class="fas 
+                  {% if sale.payment_method == 'cash' %}fa-money-bill-wave
+                  {% elif sale.payment_method == 'card' %}fa-credit-card
+                  {% else %}fa-exchange-alt{% endif %} mr-1"></i>
+                {{ sale.get_payment_method_display }}
+              </span>
+            </p>
+          </div>
+        </div>
+        
+        <!-- Mijoz Ma'lumotlari -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-muted-foreground mb-1">Mijoz</label>
+            {% if sale.client %}
+              <p class="text-foreground font-medium">{{ sale.client.name }} {{ sale.client.lname }}</p>
+              {% if sale.client.skidka > 0 %}
+                <p class="text-sm text-green-600">Chegirma: {{ sale.client.skidka }}%</p>
+              {% endif %}
+            {% else %}
+              <p class="text-muted-foreground">Mijozsiz</p>
+            {% endif %}
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-muted-foreground mb-1">Holat</label>
+            <p class="text-foreground">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <i class="fas fa-check-circle mr-1"></i>
+                Muvaffaqiyatli
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mahsulot Ma'lumotlari -->
+    <div class="bg-background border border-border rounded-xl shadow-sm p-6">
+      <h2 class="text-xl font-semibold text-foreground mb-4">Mahsulot Ma'lumotlari</h2>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-border bg-muted/10">
+              <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mahsulot</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Miqdor</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Narx</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Jami</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-border hover:bg-muted/30 transition-colors">
+              <td class="px-6 py-4">
+                <div>
+                  <p class="font-medium text-foreground">{{ sale.product.name }}</p>
+                  <p class="text-sm text-muted-foreground">{{ sale.product.brand }}</p>
+                  <p class="text-xs text-muted-foreground">ID: {{ sale.product.id }}</p>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <p class="text-foreground">{{ sale.quantity|floatformat:0 }} {{ sale.product.unit }}</p>
+              </td>
+              <td class="px-6 py-4">
+                <p class="text-foreground">{{ sale.unit_price|format_currency }} so'm</p>
+              </td>
+              <td class="px-6 py-4">
+                <p class="text-foreground font-medium">{{ sale.total_price|format_currency }} so'm</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Narx Hisobi va Amallar -->
+  <div class="lg:col-span-1">
+    <!-- Narx Hisobi -->
+    <div class="bg-background border border-border rounded-xl shadow-sm p-6 mb-6">
+      <h2 class="text-xl font-semibold text-foreground mb-4">Narx Hisobi</h2>
+      
+      <div class="space-y-3">
+        <div class="flex justify-between items-center">
+          <span class="text-muted-foreground">Jami narx:</span>
+          <span class="font-medium text-foreground">{{ sale.total_price|format_currency }} so'm</span>
+        </div>
+        
+        {% if sale.discount > 0 %}
+        <div class="flex justify-between items-center">
+          <span class="text-muted-foreground">Chegirma ({{ sale.discount }}%):</span>
+          <span class="font-medium text-green-600">-{{ sale.total_price|mul:sale.discount|div:100|floatformat:0|format_currency }} so'm</span>
+        </div>
+        {% endif %}
+        
+        <div class="border-t border-border pt-3">
+          <div class="flex justify-between items-center">
+            <span class="text-lg font-semibold text-foreground">Yakuniy narx:</span>
+            <span class="text-2xl font-bold text-foreground">{{ sale.final_price|format_currency }} so'm</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tezkor Amallar -->
+    <div class="bg-background border border-border rounded-xl shadow-sm p-6">
+      <h2 class="text-xl font-semibold text-foreground mb-4">Amallar</h2>
+      
+      <div class="space-y-3">
+        <a href="{% url 'sale_receipt' sale.id %}" class="w-full flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
+          <i class="fas fa-receipt mr-2"></i>
+          PDF Chek Olish
+        </a>
+        
+        <a href="{% url 'sale_qr_code' sale.id %}" target="_blank" class="w-full flex items-center justify-center px-4 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors">
+          <i class="fas fa-qrcode mr-2"></i>
+          QR Kod Ko'rish
+        </a>
+        
+        <a href="{% url 'sale_list' %}" class="w-full flex items-center justify-center px-4 py-3 border border-border text-foreground rounded-lg font-medium hover:bg-muted transition-colors">
+          <i class="fas fa-list mr-2"></i>
+          Sotuvlar Ro'yxati
+        </a>
+        
+        <a href="{% url 'sale_create' %}" class="w-full flex items-center justify-center px-4 py-3 border border-border text-foreground rounded-lg font-medium hover:bg-muted transition-colors">
+          <i class="fas fa-plus mr-2"></i>
+          Yangi Sotuv
+        </a>
+      </div>
+    </div>
+
+    <!-- QR Kod -->
+    <div class="bg-background border border-border rounded-xl shadow-sm p-6 mt-6">
+      <h2 class="text-xl font-semibold text-foreground mb-4">QR Kod</h2>
+      <div class="text-center">
+        <img src="{% url 'sale_qr_code' sale.id %}" alt="QR Code" class="mx-auto w-48 h-48 border border-border rounded-lg">
+        <p class="text-sm text-muted-foreground mt-2">Sotuv ma'lumotlari QR kodi</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Print receipt function
+    window.printReceipt = function() {
+        window.open("{% url 'sale_receipt' sale.id %}", '_blank');
+    };
+    
+    // Share function (basic)
+    window.shareSale = function() {
+        const saleData = {
+            id: {{ sale.id }},
+            product: "{{ sale.product.name }}",
+            quantity: {{ sale.quantity }},
+            price: {{ sale.final_price }},
+            date: "{{ sale.sale_date|date:'d.m.Y H:i' }}"
+        };
+        
+        const text = `Sotuv #${saleData.id}\nMahsulot: ${saleData.product}\nMiqdor: ${saleData.quantity}\nNarx: ${saleData.price.toLocaleString()} so'm\nSana: ${saleData.date}`;
+        
+        if (navigator.share) {
+            navigator.share({
+                title: `Sotuv #${saleData.id}`,
+                text: text,
+                url: window.location.href
+            });
+        } else {
+            // Fallback for browsers that don't support Web Share API
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Sotuv ma\'lumotlari buferga nusxalandi!');
+            });
+        }
+    };
+});
+</script>
+
+<style>
+@media print {
+    nav, .bg-muted\/30, .flex.space-x-2, .bg-background.border {
+        display: none !important;
+    }
+    
+    .bg-background {
+        background: white !important;
+    }
+    
+    .text-2xl {
+        font-size: 1.5rem !important;
+    }
+    
+    .text-xl {
+        font-size: 1.25rem !important;
+    }
+}
+</style>
+{% endblock %}

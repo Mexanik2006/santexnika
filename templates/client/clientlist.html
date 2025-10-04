@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Mijozlar - Shop.io{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="font-sans text-3xl font-bold tracking-tight text-foreground">Mijozlar</h1>
+            <p class="text-muted-foreground mt-2">Barcha mijozlaringiz ro'yxati</p>
+        </div>
+        <a href="{% url 'clientcreate' %}"
+            class="mt-4 sm:mt-0 inline-flex items-center justify-center px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2">
+            <i class="fas fa-plus mr-2"></i>
+            Yangi mijoz
+        </a>
+    </div>
+</div>
+
+<div class="bg-background border border-border rounded-xl shadow-sm overflow-hidden">
+    {% if clients %}
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b border-border bg-muted/50 dark:bg-muted/70">  <!-- Amp muted for dark header depth -->
+                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Ism</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Familiya</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Chegirma</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Amallar</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-border dark:divide-gray-600">  <!-- Brighter divider in dark for row separation -->
+                {% for client in clients %}
+                <tr class="hover:bg-muted/30 dark:hover:bg-muted/50 transition-colors">  <!-- Deeper hover in dark for feedback -->
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ client.id }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ client.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ client.lname }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ client.skidka }}%</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">
+                            <a href="{% url 'clientview' client.id %}"
+                                class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" title="Ko'rish">  <!-- Adjust blue for dark visibility -->
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'clientedit' client.id %}"
+                                class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 transition-colors" title="Tahrirlash">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'clientdelete' client.id %}"
+                                class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors" title="O'chirish">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <i class="fas fa-users text-4xl text-muted-foreground dark:text-gray-400 mb-4"></i>  <!-- Softer muted in dark for icon -->
+        <h3 class="text-lg font-medium text-foreground mb-2">Hali mijozlar mavjud emas</h3>
+        <p class="text-muted-foreground dark:text-gray-500 mb-6">Birinchi mijozingizni qo'shing</p>  <!-- Lighter gray for dark text -->
+        <a href="{% url 'clientcreate' %}"
+            class="inline-flex items-center justify-center px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2">
+            <i class="fas fa-plus mr-2"></i>
+            Yangi mijoz
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+/* Targeted dark mode fixes for this template - layer on base for harmony */
+.dark .bg-muted\/50 {
+    background-color: #1f1f1f !important;  /* Deeper header for contrast */
+}
+.dark .divide-gray-600 {
+    border-color: #4b5563 !important;  /* Crisp row dividers */
+}
+.dark .hover\:bg-muted\/50:hover {
+    background-color: #1f1f1f !important;  /* Subtle hover depth */
+}
+</style>
+{% endblock %}

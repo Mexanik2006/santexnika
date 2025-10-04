@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Shop.io{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="font-sans text-3xl font-bold tracking-tight text-foreground">{{ title }}</h1>
+    <p class="text-muted-foreground mt-2">Mahsulot ma'lumotlarini kiriting</p>
+</div>
+
+<div class="bg-background border border-border rounded-xl shadow-sm p-6 max-w-2xl">
+    <form method="post" id="productForm">
+        {% csrf_token %}
+
+        <div class="space-y-6">
+            <div>
+                <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                    {{ form.name.label }}
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {{ form.name.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.brand.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                    {{ form.brand.label }}
+                </label>
+                {{ form.brand }}
+                {% if form.brand.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {{ form.brand.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.price.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                        {{ form.price.label }}
+                    </label>
+                    {{ form.price }}
+                    {% if form.price.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {{ form.price.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.quantity.id_for_label }}"
+                        class="block text-sm font-medium text-foreground mb-2">
+                        {{ form.quantity.label }}
+                    </label>
+                    {{ form.quantity }}
+                    {% if form.quantity.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {{ form.quantity.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <label for="{{ form.unit.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                    {{ form.unit.label }}
+                </label>
+                {{ form.unit }}
+                {% if form.unit.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {{ form.unit.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="flex space-x-3 pt-4">
+                <button type="submit"
+                    class="inline-flex items-center justify-center px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2">
+                    <i class="fas fa-save mr-2"></i>
+                    Saqlash
+                </button>
+                <a href="{% url 'productlist' %}"
+                    class="inline-flex items-center justify-center px-4 py-2 border border-border text-foreground rounded-lg font-medium hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2">
+                    Bekor qilish
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Duplicate Product Modal -->
+{% if show_modal and duplicate_product %}
+<div id="duplicateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-background rounded-xl shadow-lg max-w-md w-full p-6">
+        <div class="text-center mb-4">
+            <i class="fas fa-exclamation-triangle text-3xl text-yellow-500 mb-3"></i>
+            <h3 class="text-lg font-semibold text-foreground mb-2">Diqqat!</h3>
+            <p class="text-muted-foreground">Sizda ushbu mahsulot allaqachon mavjud:</p>
+        </div>
+
+        <div class="bg-muted/50 border border-border rounded-lg p-4 mb-4">
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Nomi:</span>
+                    <span class="text-foreground font-medium">{{ duplicate_product.name }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Brend:</span>
+                    <span class="text-foreground font-medium">{{ duplicate_product.brand }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Joriy narx:</span>
+                    <span class="text-foreground font-medium">{{ duplicate_product.price }} so'm</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Joriy miqdor:</span>
+                    <span class="text-foreground font-medium">{{ duplicate_product.quantity }}
+                        {{ duplicate_product.get_unit_display }}</span>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-sm text-muted-foreground mb-4">Yangi ma'lumotlarni mavjud mahsulotga qo'shishni xohlaysizmi?</p>
+
+        <div class="flex space-x-3">
+            <button type="button" onclick="updateExistingProduct()"
+                class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
+                <i class="fas fa-sync-alt mr-2"></i>
+                Ha, yangilash
+            </button>
+            <button type="button" onclick="createNewProduct()"
+                class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:opacity-90 transition-opacity">
+                <i class="fas fa-plus mr-2"></i>
+                Yangi yaratish
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateExistingProduct() {
+        const form = document.getElementById('productForm');
+        const formData = new FormData(form);
+
+        // Show loading state
+        const updateBtn = event.target;
+        updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Yuklanmoqda...';
+        updateBtn.disabled = true;
+
+        fetch('{% url "update_existing_product" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                product_id: {{ duplicate_product.id }},
+            price: formData.get('price'),
+            quantity: formData.get('quantity'),
+            unit: formData.get('unit')
+        })
+    })
+    .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Success - redirect to product list
+                window.location.href = '{% url "productlist" %}';
+            } else {
+                // Error - show message and re-enable button
+                alert('Xatolik yuz berdi: ' + data.error);
+                updateBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Ha, yangilash';
+                updateBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Tarmoq xatosi yuz berdi');
+            updateBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Ha, yangilash';
+            updateBtn.disabled = false;
+        });
+}
+
+    function createNewProduct() {
+        document.getElementById('duplicateModal').remove();
+        // Allow form submission to continue
+        const form = document.getElementById('productForm');
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'force_create';
+        hiddenInput.value = 'true';
+        form.appendChild(hiddenInput);
+        form.submit();
+    }
+</script>
+{% endif %}
+
+<script>
+    // Real-time duplicate checking
+    document.addEventListener('DOMContentLoaded', function () {
+        const nameInput = document.getElementById('id_name');
+        const brandInput = document.getElementById('id_brand');
+
+        function checkDuplicate() {
+            const name = nameInput.value.trim();
+            const brand = brandInput.value.trim();
+
+            if (name && brand) {
+                fetch('{% url "check_existing_product" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        brand: brand
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exists) {
+                            // Show warning message
+                            if (!document.getElementById('duplicateWarning')) {
+                                const warning = document.createElement('div');
+                                warning.id = 'duplicateWarning';
+                                warning.className = 'mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm dark:bg-yellow-900 dark:border-yellow-700 dark:text-yellow-200';
+                                warning.innerHTML = `
+                            <div class="flex items-start">
+                                <i class="fas fa-exclamation-triangle mr-2 mt-0.5"></i>
+                                <div>
+                                    <strong>Diqqat!</strong> Bu nom va brend bilan mahsulot allaqachon mavjud.
+                                    <br><small>Mahsulotni saqlaganda yangilash imkoniyati beriladi.</small>
+                                </div>
+                            </div>
+                        `;
+                                brandInput.parentNode.appendChild(warning);
+                            }
+                        } else {
+                            // Remove warning if exists
+                            const warning = document.getElementById('duplicateWarning');
+                            if (warning) {
+                                warning.remove();
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Duplicate check error:', error);
+                    });
+            } else {
+                // Remove warning if exists
+                const warning = document.getElementById('duplicateWarning');
+                if (warning) {
+                    warning.remove();
+                }
+            }
+        }
+
+        // Add event listeners with debouncing
+        let timeoutId;
+        function debouncedCheck() {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(checkDuplicate, 500);
+        }
+
+        nameInput.addEventListener('input', debouncedCheck);
+        brandInput.addEventListener('input', debouncedCheck);
+        nameInput.addEventListener('blur', checkDuplicate);
+        brandInput.addEventListener('blur', checkDuplicate);
+    });
+</script>
+{% endblock %}

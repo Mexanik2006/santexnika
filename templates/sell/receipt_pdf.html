@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+{% load sell_filters %}  <!-- Ah, the matching library name—does this align with your filters.py? -->
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Chek #{{ sale.id }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; color: #000; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .company { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        .address { font-size: 10px; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+        th { background-color: #f0f0f0; font-weight: bold; }
+        .total { font-size: 14px; font-weight: bold; text-align: right; }
+        .footer { margin-top: 20px; text-align: center; font-size: 10px; }
+        .discount { color: #f00; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company">Shop.io Do'koni</div>
+        <div class="address">Manzil: Toshkent, O'zbekiston<br>Telefon: +998 90 000 00 00</div>
+        <hr style="border: none; border-top: 2px solid #000; margin: 10px 0;">
+        <h2>Chek #{{ sale.id }}</h2>
+        <p>Sana: {{ sale.sale_date|date:"d.m.Y H:i" }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Mahsulot</th>
+                <th>Miqdor</th>
+                <th>Narx (so'm)</th>
+                <th>Jami (so'm)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ sale.product.name }} ({{ sale.product.brand }})</td>
+                <td>{{ sale.quantity }} {{ sale.product.unit }}</td>
+                <td>{{ sale.unit_price|floatformat:0 }}</td>
+                <td>{{ sale.total_price|floatformat:0 }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% if sale.discount > 0 %}
+    <p class="discount">Chegirma: {{ sale.discount }}% ( -{{ sale.total_price|mul:sale.discount|div:100|floatformat:0 }} so'm)</p>  <!-- See? Dash outside the tag—freer flow! -->
+    {% endif %}
+
+    <div class="total">
+        Yakuniy jami: {{ sale.final_price|floatformat:0 }} so'm
+    </div>
+
+    <div class="footer">
+        <p>Sotuvchi: {{ sale.seller.get_full_name|default:sale.seller.username }}</p>
+        <p>To'lov usuli: {{ sale.get_payment_method_display }}</p>
+        <p>Rahmat! Qayta keling.</p>
+    </div>
+</body>
+</html>

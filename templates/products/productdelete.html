@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} ni o'chirish - Shop.io{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="font-sans text-3xl font-bold tracking-tight text-foreground">Mahsulotni o'chirish</h1>
+    <p class="text-muted-foreground mt-2">Quyidagi mahsulotni rostdan ham o'chirmoqchimisiz?</p>
+</div>
+
+<div class="bg-background border border-border rounded-xl shadow-sm p-6 max-w-2xl">
+    <div class="text-center mb-6">
+        <i class="fas fa-exclamation-triangle text-4xl text-yellow-500 mb-4"></i>
+        <h2 class="text-xl font-semibold text-foreground mb-2">Ogohlantirish</h2>
+        <p class="text-muted-foreground">Ushbu amalni ortga qaytarib bo'lmaydi</p>
+    </div>
+
+    <div class="bg-muted/10 border border-border rounded-lg p-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <p class="text-sm text-muted-foreground">ID</p>
+                <p class="text-foreground font-medium">{{ product.id }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-muted-foreground">Nomi</p>
+                <p class="text-foreground font-medium">{{ product.name }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-muted-foreground">Brend</p>
+                <p class="text-foreground font-medium">{{ product.brand }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-muted-foreground">Narx</p>
+                <p class="text-foreground font-medium">{{ product.price }} so'm</p>
+            </div>
+            <div>
+                <p class="text-sm text-muted-foreground">Miqdor</p>
+                <p class="text-foreground font-medium">{{ product.quantity }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-muted-foreground">Oʻlchov birligi</p>
+                <p class="text-foreground font-medium">{{ product.get_unit_display }}</p>
+            </div>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="flex space-x-3 justify-center">
+            <button type="submit"
+                class="inline-flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                <i class="fas fa-trash mr-2"></i>
+                Ha, o'chirish
+            </button>
+            <a href="{% url 'productview' product.id %}"
+                class="inline-flex items-center justify-center px-4 py-2 border border-border text-foreground rounded-lg font-medium hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2">
+                Bekor qilish
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

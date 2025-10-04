@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load product_filters %}
+
+{% block title %}Statistika - Shop.io{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="font-sans text-3xl font-bold tracking-tight text-foreground">Statistika</h1>
+            <p class="text-muted-foreground mt-2">Mahsulotlaringizning umumiy holati va KPI ko'rsatkichlari</p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <button id="refreshStats" class="inline-flex items-center justify-center px-3 py-1.5 bg-black dark:bg-white text-white dark:text-black rounded-md font-medium hover:opacity-90 dark:hover:opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20 focus:ring-offset-2">
+                <i class="fas fa-sync-alt mr-1.5 text-xs"></i>
+                Yangilash
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Grid: Responsive, icon-led insights -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <!-- Total Products -->
+    <div class="bg-background border border-border rounded-lg p-4">
+        <div class="flex items-center">
+            <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <i class="fas fa-boxes text-blue-600 dark:text-blue-400"></i>
+            </div>
+            <div class="ml-4 flex-1">
+                <p class="text-sm font-medium text-muted-foreground dark:text-gray-400">Jami Mahsulotlar</p>
+                <p class="text-2xl font-bold text-foreground">{{ total_products|format_quantity }}</p>
+                <p class="text-xs text-muted-foreground dark:text-gray-500">{% if total_products > 0 %}+{{ growth_products }} o'tgan oyga nisbatan{% else %}Hali yo'q{% endif %}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Value -->
+    <div class="bg-background border border-border rounded-lg p-4">
+        <div class="flex items-center">
+            <div class="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+                <i class="fas fa-coins text-green-600 dark:text-green-400"></i>
+            </div>
+            <div class="ml-4 flex-1">
+                <p class="text-sm font-medium text-muted-foreground dark:text-gray-400">Jami Qiymat</p>
+                <p class="text-2xl font-bold text-foreground">{{ total_value|format_currency }} so'm</p>
+                <p class="text-xs text-muted-foreground dark:text-gray-500">O'rtacha narx: {{ avg_price|format_currency }} so'm</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    <div class="bg-background border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <div class="flex items-center">
+            <div class="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
+                <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400"></i>
+            </div>
+            <div class="ml-4 flex-1">
+                <p class="text-sm font-medium text-muted-foreground dark:text-gray-400">Kam Qolgan</p>
+                <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ low_stock_count|format_quantity }}</p>
+                <p class="text-xs text-muted-foreground dark:text-gray-500">{{ low_stock_percentage|floatformat:1 }}% mahsulotlar</p>
+            </div>
+        </div>
+        <div class="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div class="bg-red-600 h-2 rounded-full" style="width: {{ low_stock_percentage }}%"></div>
+        </div>
+    </div>
+
+    <!-- High Value Items -->
+    <div class="bg-background border border-green-200 dark:border-green-800 rounded-lg p-4">
+        <div class="flex items-center">
+            <div class="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+                <i class="fas fa-crown text-green-600 dark:text-green-400"></i>
+            </div>
+            <div class="ml-4 flex-1">
+                <p class="text-sm font-medium text-muted-foreground dark:text-gray-400">Yuqori Qiymatli</p>
+                <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ high_value_count|format_quantity }}</p>
+                <p class="text-xs text-muted-foreground dark:text-gray-500">Narxi {{ high_value_threshold }} so'mdan yuqori</p>
+            </div>
+        </div>
+        <div class="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div class="bg-green-600 h-2 rounded-full" style="width: {{ high_value_percentage }}%"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Insights Section: Narrative summaries, actionable -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <div class="bg-background border border-border rounded-xl shadow-sm p-6 lg:col-span-2">
+        <h2 class="text-lg font-semibold text-foreground mb-4 flex items-center">
+            <i class="fas fa-chart-bar mr-2 text-accent"></i>
+            Umumiy Tahlil
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="text-center p-4 border-r border-border dark:border-gray-600 md:border-r-0 md:pr-0 md:pb-4 last:border-r-0">
+                <p class="text-3xl font-bold text-foreground">{{ total_value|format_currency }} so'm</p>
+                <p class="text-sm text-muted-foreground dark:text-gray-500">Jami qiymat</p>
+            </div>
+            <div class="text-center p-4 border-r border-border dark:border-gray-600 md:border-r-0 md:pr-0 md:pb-4 last:border-r-0">
+                <p class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ avg_price|floatformat:0 }} so'm</p>
+                <p class="text-sm text-muted-foreground dark:text-gray-500">O'rtacha narx</p>
+            </div>
+            <div class="text-center p-4">
+                <p class="text-3xl font-bold text-orange-600 dark:text-orange-400">{{ avg_quantity|floatformat:1 }}</p>
+                <p class="text-sm text-muted-foreground dark:text-gray-500">O'rtacha miqdor</p>
+            </div>
+        </div>
+        <p class="text-sm text-muted-foreground dark:text-gray-500 mt-4">Oxirgi yangilanish: {{ last_updated|date:"d.m.Y H:i" }}</p>
+    </div>
+
+    <div class="bg-background border border-border rounded-xl shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-foreground mb-4 flex items-center">
+            <i class="fas fa-lightbulb mr-2 text-yellow-500 dark:text-yellow-400"></i>
+            Tavsiyalar
+        </h2>
+        <ul class="space-y-2 text-sm">
+            {% if low_stock_count > 0 %}
+            <li class="flex items-center text-red-600 dark:text-red-400">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                {{ low_stock_count }} ta mahsulot kam qolgan – zaxira buyurtma bering
+            </li>
+            {% endif %}
+            {% if high_value_count > total_products %}
+            <li class="flex items-center text-green-600 dark:text-green-400">
+                <i class="fas fa-check-circle mr-2"></i>
+                {{ high_value_percentage|floatformat:0 }}% mahsulotlar yuqori qiymatli – ularni reklama qiling
+            </li>
+            {% endif %}
+            <li class="flex items-center text-blue-600 dark:text-blue-400">
+                <i class="fas fa-chart-line mr-2"></i>
+                O'rtacha narx {{ avg_price|floatformat:0 }} so'm – bozor tendensiyalarini kuzating
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Action Footer: Quick links, no clutter -->
+<div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 justify-center">
+    <a href="{% url 'productlist' %}" class="inline-flex items-center justify-center px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:opacity-90 transition-opacity">
+        <i class="fas fa-list mr-2"></i>
+        Mahsulotlar Ro'yxati
+    </a>
+    <a href="{% url 'productcreate' %}" class="inline-flex items-center justify-center px-4 py-2 border border-border text-foreground rounded-lg font-medium hover:bg-muted transition-colors">
+        <i class="fas fa-plus mr-2"></i>
+        Yangi Qo'shish
+    </a>
+</div>
+
+<script>
+    // Refresh on button—simple AJAX for live feel
+    document.getElementById('refreshStats').addEventListener('click', function() {
+        location.reload();  // For now—expand to AJAX later?
+    });
+</script>
+
+<!-- Dark Mode & KPI Polish: Vivid, breathable -->
+<style>
+/* Layer on base: Bars smooth, alerts warm */
+.progress-bar { transition: width 0.4s ease-in-out; }
+.dark .text-gray-500 { color: #9ca3af !important; }  /* Softer muteds in dark */
+.dark .border-gray-600 { border-color: #4b5563 !important; }  /* Crisp dividers */
+.hover\:shadow-md:hover { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important; }
+.dark .hover\:shadow-md:hover { box-shadow: 0 4px 6px rgba(255, 255, 255, 0.05) !important; }
+/* Insights list—subtle bullets */
+.insights li { padding-left: 1rem; position: relative; }
+.insights li::before { content: ''; position: absolute; left: 0; top: 0.25rem; width: 0.25rem; height: 0.25rem; border-radius: 50%; background: currentColor; }
+</style>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ client.name }} {{ client.lname }} - Shop.io{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="font-sans text-3xl font-bold tracking-tight text-foreground">{{ client.name }} {{ client.lname }}</h1>
+            <p class="text-muted-foreground mt-2">Mijoz ma'lumotlari</p>
+        </div>
+        <div class="mt-4 sm:mt-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+            <!-- Consolidated actions here—no duplicates below -->
+            <a href="{% url 'clientedit' client.id %}"
+                class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                <i class="fas fa-edit mr-2"></i>
+                Tahrirlash
+            </a>
+            <a href="{% url 'clientlist' %}"
+                class="inline-flex items-center justify-center px-4 py-2 border border-border text-foreground rounded-lg font-medium hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Ro'yxatga qaytish
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">  <!-- Responsive: Single column on small, dual on large -->
+    <!-- Single info card—clean, icon-led for visual flow -->
+    <div class="bg-background border border-border rounded-xl shadow-sm p-6 order-2 lg:order-1">  <!-- Order for mobile: Actions first? Nah, info leads -->
+        <h2 class="text-lg font-semibold text-foreground mb-6 flex items-center">
+            <i class="fas fa-user-circle mr-2 text-accent"></i>
+            Asosiy ma'lumotlar
+        </h2>
+        <div class="space-y-4">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-id-card text-muted-foreground text-sm"></i>
+                <div>
+                    <p class="text-sm text-muted-foreground">ID</p>
+                    <p class="text-foreground font-medium">{{ client.id }}</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-user text-muted-foreground text-sm"></i>
+                <div>
+                    <p class="text-sm text-muted-foreground">Ism</p>
+                    <p class="text-foreground font-medium">{{ client.name }}</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-user text-muted-foreground text-sm"></i>
+                <div>
+                    <p class="text-sm text-muted-foreground">Familiya</p>
+                    <p class="text-foreground font-medium">{{ client.lname }}</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-percent text-green-600 text-sm"></i>
+                <div>
+                    <p class="text-sm text-muted-foreground">Chegirma</p>
+                    <p class="text-foreground font-medium text-green-600">{{ client.skidka }}%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions card—now a footer-like bar, full-width on mobile for touch-friendliness -->
+    <div class="bg-background border border-border rounded-xl shadow-sm p-6 order-1 lg:order-2">  <!-- Order: Actions prominent on mobile -->
+        <h2 class="text-lg font-semibold text-foreground mb-6 flex items-center">
+            <i class="fas fa-cogs mr-2 text-accent"></i>
+            Amallar
+        </h2>
+        <div class="space-y-3">  <!-- Stack on mobile, row on large? But keep simple stack for consistency -->
+            <a href="{% url 'clientedit' client.id %}"
+                class="w-full flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 shadow-sm hover:shadow-md">
+                <i class="fas fa-edit mr-2"></i>
+                Mijozni tahrirlash
+            </a>
+            <a href="{% url 'clientdelete' client.id %}"
+                class="w-full flex items-center justify-center px-4 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-sm hover:shadow-md">
+                <i class="fas fa-trash mr-2"></i>
+                Mijozni o'chirish
+            </a>
+            <!-- No duplicate back—handled in header -->
+        </div>
+    </div>
+</div>
+
+<!-- Dark mode tweaks for harmony—deeper shadows, warmer accents -->
+<style>
+/* Layer on base: Responsive shadows, hover lifts for delight */
+@media (min-width: 1024px) {
+    .shadow-sm { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+    .dark .shadow-sm { box-shadow: 0 1px 3px rgba(255, 255, 255, 0.05); }
+}
+.hover\:shadow-md:hover { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+.dark .hover\:shadow-md:hover { box-shadow: 0 4px 6px rgba(255, 255, 255, 0.05); }
+
+/* Ensure icons pop in dark—subtle glow on focus */
+.dark .text-accent { color: #ffffff !important; }  /* Brighter accent for icons */
+.dark .text-green-600 { color: #10b981 !important; }  /* Vivid green for discount */
+</style>
+{% endblock %}

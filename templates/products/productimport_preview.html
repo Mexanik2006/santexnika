@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}Importni Tasdiqlash - Shop.io{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="font-sans text-3xl font-bold tracking-tight text-foreground">Importni Tasdiqlash</h1>
+            <p class="text-muted-foreground mt-2">Quyidagi mahsulotlar import qilinadi</p>
+        </div>
+        <div class="mt-4 sm:mt-0 flex space-x-2">
+            <a href="{% url 'productimport' %}"
+                class="inline-flex items-center justify-center px-4 py-2 border border-border text-foreground rounded-lg font-medium hover:bg-muted transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Orqaga
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-background border border-border rounded-lg p-4">
+        <div class="flex items-center">
+            <div class="p-2 bg-blue-100 rounded-lg dark:bg-blue-900">
+                <i class="fas fa-boxes text-blue-600 dark:text-blue-400"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-muted-foreground">Jami mahsulotlar</p>
+                <p class="text-2xl font-bold text-foreground">{{ total_products }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-background border border-border rounded-lg p-4">
+        <div class="flex items-center">
+            <div class="p-2 bg-green-100 rounded-lg dark:bg-green-900">
+                <i class="fas fa-plus text-green-600 dark:text-green-400"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-muted-foreground">Yangi mahsulotlar</p>
+                <p class="text-2xl font-bold text-foreground">{{ new_products }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-background border border-border rounded-lg p-4">
+        <div class="flex items-center">
+            <div class="p-2 bg-yellow-100 rounded-lg dark:bg-yellow-900">
+                <i class="fas fa-sync-alt text-yellow-600 dark:text-yellow-400"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-muted-foreground">Yangilanadigan</p>
+                <p class="text-2xl font-bold text-foreground">{{ update_products }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="bg-background border border-border rounded-xl shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b border-border bg-muted/10">
+                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">#
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Nomi</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Brend</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Narx</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Miqdor</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Oʻlchov</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Holat</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+                {% for product in products_data %}
+                <tr class="hover:bg-muted/30 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ forloop.counter }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ product.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ product.brand }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ product.price }} so'm</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ product.quantity }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ product.unit }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {% if product.action == 'update' %}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                            <i class="fas fa-sync-alt mr-1"></i>
+                            Yangilanadi
+                        </span>
+                        {% if product.existing_product %}
+                        <div class="text-xs text-muted-foreground mt-1">
+                            Mavjud: {{ product.existing_product.quantity }} {{ product.existing_product.unit }}
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            <i class="fas fa-plus mr-1"></i>
+                            Yangi
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="flex space-x-3 justify-center mt-6">
+    <button id="confirmImport"
+        class="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+        <i class="fas fa-check mr-2"></i>
+        Importni Boshlash
+    </button>
+    <a href="{% url 'productimport' %}"
+        class="inline-flex items-center justify-center px-6 py-3 border border-border text-foreground rounded-lg font-medium hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2">
+        <i class="fas fa-times mr-2"></i>
+        Bekor qilish
+    </a>
+</div>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-background rounded-xl shadow-lg max-w-md w-full p-6">
+        <div class="text-center">
+            <div class="spinner mx-auto mb-4"></div>
+            <h3 class="text-lg font-semibold text-foreground mb-2">Import Bajarilmoqda</h3>
+            <p class="text-muted-foreground">Iltimos, kuting...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Results Modal -->
+<div id="resultsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-background rounded-xl shadow-lg max-w-md w-full p-6">
+        <div class="text-center mb-4">
+            <i class="fas fa-check-circle text-4xl text-green-500 mb-3"></i>
+            <h3 class="text-lg font-semibold text-foreground mb-2">Import Muvaffaqiyatli</h3>
+        </div>
+
+        <div id="resultsContent" class="space-y-2 text-sm mb-4">
+            <!-- Results will be populated by JavaScript -->
+        </div>
+
+        <div class="flex justify-center">
+            <a href="{% url 'productlist' %}"
+                class="inline-flex items-center justify-center px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:opacity-90 transition-opacity">
+                <i class="fas fa-list mr-2"></i>
+                Mahsulotlar Ro'yxatiga O'tish
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('confirmImport').addEventListener('click', function () {
+        const btn = this;
+        const loadingModal = document.getElementById('loadingModal');
+        const resultsModal = document.getElementById('resultsModal');
+        const resultsContent = document.getElementById('resultsContent');
+
+        // Show loading modal
+        loadingModal.classList.remove('hidden');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Import Bajarilmoqda...';
+
+        // Send request to process import
+        fetch('{% url "process_import" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading modal
+                loadingModal.classList.add('hidden');
+
+                if (data.success) {
+                    // Show success results
+                    const results = data.results;
+                    resultsContent.innerHTML = `
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="p-3 bg-green-50 rounded-lg dark:bg-green-900">
+                        <div class="text-2xl font-bold text-green-600 dark:text-green-400">${results.created}</div>
+                        <div class="text-sm text-green-800 dark:text-green-200">Yangi qo'shildi</div>
+                    </div>
+                    <div class="p-3 bg-yellow-50 rounded-lg dark:bg-yellow-900">
+                        <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">${results.updated}</div>
+                        <div class="text-sm text-yellow-800 dark:text-yellow-200">Yangilandi</div>
+                    </div>
+                </div>
+                ${results.errors > 0 ? `
+                    <div class="mt-4 p-3 bg-red-50 rounded-lg dark:bg-red-900">
+                        <div class="text-sm font-medium text-red-800 dark:text-red-200">${results.errors} ta xatolik</div>
+                        <div class="text-xs text-red-600 dark:text-red-300 mt-1 text-left">
+                            ${results.error_messages.slice(0, 3).map(msg => `<div>• ${msg}</div>`).join('')}
+                            ${results.error_messages.length > 3 ? `<div>... va ${results.error_messages.length - 3} ta boshqa xatolar</div>` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+                    resultsModal.classList.remove('hidden');
+                } else {
+                    alert('Importda xatolik: ' + data.error);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check mr-2"></i>Importni Boshlash';
+                }
+            })
+            .catch(error => {
+                loadingModal.classList.add('hidden');
+                alert('Tarmoq xatosi: ' + error);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i>Importni Boshlash';
+            });
+    });
+</script>
+{% endblock %}
